@@ -123,7 +123,7 @@ PASS
 
 ```mermaid
 graph TB
-    Client[HTTP Client] --> RApp[REST App]
+    Main[cmd/pgc - Entry Point] --> RApp[REST App]
     RApp --> Handlers[HTTP Handlers]
     Handlers --> AService[Assets Service]
     Handlers --> UService[Users Service]
