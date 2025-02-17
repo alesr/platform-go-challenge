@@ -1,0 +1,8 @@
+services:
+  docs:
+    build:
+      context: ..
+      dockerfile: build/Dockerfile.docs
+    ports:
+      - "4567:4567"
+    command: serve

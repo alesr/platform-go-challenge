@@ -3,6 +3,7 @@
 PROJECT_NAME := Platform Go Challenge
 DOCKER_COMPOSE_FILE := build/docker-compose.yaml
 DOCKER_COMPOSE_TEST_FILE := build/docker-compose-test.yaml
+DOCKER_COMPOSE_DOCS_FILE := build/docker-compose-docs.yaml
 GO_FILES := $(shell find . -type f -name '*.go')
 COMPOSE_BAKE := COMPOSE_BAKE=true
 
@@ -15,6 +16,18 @@ help:
 	@echo "${PROJECT_NAME}"
 	@echo "------------------------------------------------------------------------"
 	@grep -E '^[a-zA-Z0-9_/%\-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+#-----------------------------------------------------------------------
+# Documentation
+#-----------------------------------------------------------------------
+.PHONY: docs-up docs-down
+docs-up: ## Start documentation server
+	docker compose -f $(DOCKER_COMPOSE_DOCS_FILE) up --build -d docs --remove-orphans
+	@echo "API spec at 'http://localhost:4567/'. Give a couple seconds to become available."
+
+docs-down: ## Stop documentation server
+	docker compose -f $(DOCKER_COMPOSE_DOCS_FILE) down docs
+
 
 #-----------------------------------------------------------------------
 # Code Quality & Security
@@ -39,7 +52,7 @@ check-all: format vet vulncheck ## Run all code quality checks
 		@echo "All quality checks completed!"
 
 #-----------------------------------------------------------------------
-# Database Management )
+# Database Management
 #-----------------------------------------------------------------------
 .PHONY: db-up db-down
 db-up: ## Start app database in container
@@ -93,11 +106,11 @@ docker-build: ## Build docker images if needed
 	$(COMPOSE_BAKE) docker compose -f $(DOCKER_COMPOSE_TEST_FILE) build --no-cache
 
 docker-up: ## Start the application and databases in containers
-	$(COMPOSE_BAKE) docker compose -f $(DOCKER_COMPOSE_FILE) up -d
+	$(COMPOSE_BAKE) docker compose -f $(DOCKER_COMPOSE_FILE) up --remove-orphans
 
 docker-down: ## Stop and remove all containers and volumes
 	docker compose -f $(DOCKER_COMPOSE_FILE) down -v --remove-orphans
-	docker compose -f $(DOCKER_COMPOSE_TEST_FILE) down -v --remove-orphans
+	docker compose -f $(DOCKER_COMPOSE_TEST_FILE) down -v
 
 docker-logs: ## View application logs
 	docker compose -f $(DOCKER_COMPOSE_FILE) logs -f app
@@ -110,16 +123,16 @@ test-unit-docker: ## Run unit tests in Docker
 	$(COMPOSE_BAKE) docker compose -f $(DOCKER_COMPOSE_TEST_FILE) run --rm test_runner go test -short -v -count=1 -race -cover ./...
 
 test-it-docker: ## Run integration tests in Docker
-	$(COMPOSE_BAKE) docker compose -f $(DOCKER_COMPOSE_TEST_FILE) up -d test_db
+	$(COMPOSE_BAKE) docker compose -f $(DOCKER_COMPOSE_TEST_FILE) up -d test_db --remove-orphans
 	$(COMPOSE_BAKE) docker compose -f $(DOCKER_COMPOSE_TEST_FILE) run --rm test_runner go test -v ./tests/integration/...
 	@make docker-down
 
 test-e2e-docker: ## Run e2e tests in Docker
-	$(COMPOSE_BAKE) docker compose -f $(DOCKER_COMPOSE_TEST_FILE) up -d test_db
+	$(COMPOSE_BAKE) docker compose -f $(DOCKER_COMPOSE_TEST_FILE) up -d test_db --remove-orphans
 	$(COMPOSE_BAKE) docker compose -f $(DOCKER_COMPOSE_TEST_FILE) run --rm test_runner go test -v ./tests/e2e/...
 	@make docker-down
 
 test-all-docker: ## Run all tests in Docker
-	$(COMPOSE_BAKE) docker compose -f $(DOCKER_COMPOSE_TEST_FILE) up -d test_db
+	$(COMPOSE_BAKE) docker compose -f $(DOCKER_COMPOSE_TEST_FILE) up -d test_db --remove-orphans
 	$(COMPOSE_BAKE) docker compose -f $(DOCKER_COMPOSE_TEST_FILE) run --rm test_runner go test -v -count=1 -race ./tests/integration/... ./tests/e2e/...
 	@make docker-down
