@@ -19,11 +19,18 @@ While implementing this solution, I made several assumptions and established som
 
 ## Testing the Solution (Demo)
 
+### Prerequisites
+
+- Docker
+- Go 1.24 for running the application outside Docker containers (I'm using a new feature =])
+
+### Demo
+
 Let's start with the most important part.
 
 To launch the application in a Docker container, run:
 
-```shell
+```bash
 make docker-up
 ```
 
@@ -36,19 +43,19 @@ If you prefer running the app outside Docker, you can use `make run` which will 
 
 To list test users after initializing the API:
 
-```shell
+```bash
 curl "http://localhost:8090/users"
 ```
 
 For listing available assets (charts, insights, audiences), call:
 
-```shell
+```bash
 curl "http://localhost:8090/assets?pageSize=10&maxResults=100"
 ```
 
 Once you have obtained the test user and asset IDs from the previous steps, you can mark an asset as a favorite by making the following request:
 
-```shell
+```bash
 curl -X POST "http://localhost:8090/assets/favorite" \
   -H "Content-Type: application/json" \
   -d '{
@@ -60,7 +67,7 @@ curl -X POST "http://localhost:8090/assets/favorite" \
 
 To update the description of a favorited asset:
 
-```shell
+```bash
 curl -X PATCH "http://localhost:8090/users/[your-selected-user-id]/favorites/[favorite-id-from-previous-step]" \
   -H "Content-Type: application/json" \
   -d '{
@@ -70,7 +77,7 @@ curl -X PATCH "http://localhost:8090/users/[your-selected-user-id]/favorites/[fa
 
 Finally, to remove a favorite:
 
-```shell
+```bash
 curl -X DELETE "http://localhost:8090/users/01JM9RECVAMFMY137JMWXEEW9A/favorites/[favcorite-id-from-previous-steps]"
 ```
 
@@ -82,7 +89,7 @@ I've designed the end-to-end tests to demo application in a convenient way.
 
 When you run `make test-e2e-docker`, you should see output similar to:
 
-```shell
+```bash
 === RUN   TestE2E
 
 Listing users...
@@ -107,7 +114,7 @@ Favorite successfully deleted
 PASS
 ```
 
-## System Design
+## Application Design
 
 ```mermaid
 graph TB
@@ -123,10 +130,40 @@ graph TB
     InMemRepo --> Cache[(Memory Cache)]
 ```
 
-## Prerequisites
+## Project Structure
 
-- Docker
-- Go 1.24 for running the application outside Docker containers (I'm using a new feature =])
+```
+.
+├── api                       # API-specific code
+│   └── resterrors           # Transport error mapping
+├── build                    # Docker and build configurations
+├── cmd                      # Application setup and initialization
+│   └── pgc
+├── docs                     # API documentation
+│   └── source
+│       └── includes
+├── internal
+│   ├── app                  # HTTP server and REST API
+│   │   └── rest
+│   │       └── handlers
+│   ├── assets              # Service for assets management
+│   │   ├── favorites       # Subpackage with service for managing user's favorite assets
+│   │   ├── postgres        # Repository implementation for assets and favorites
+│   │   └── sampler         # Samples the DB with test assets
+│   ├── pkg
+│   │   ├── dbmigrations
+│   │   ├── envutil
+│   │   ├── httputil
+│   │   │   └── middleware
+│   │   └── logutil
+│   └── users               # User service
+│       ├── inmemorydb
+│       └── sampler         # Samples the DB with test users
+├── migrations
+└── tests
+    ├── e2e
+    └── integration
+```
 
 ## Running the Application
 
@@ -229,41 +266,6 @@ This includes:
 ## Available Make Commands
 
 Run `make help` to see all available commands and their descriptions.
-
-## Project Structure
-
-```
-.
-├── api                       # API-specific code
-│   └── resterrors           # Transport error mapping
-├── build                    # Docker and build configurations
-├── cmd                      # Application setup and initialization
-│   └── pgc
-├── docs                     # API documentation
-│   └── source
-│       └── includes
-├── internal
-│   ├── app                  # HTTP server and REST API
-│   │   └── rest
-│   │       └── handlers
-│   ├── assets              # Service for assets management
-│   │   ├── favorites       # Subpackage with service for managing user's favorite assets
-│   │   ├── postgres        # Repository implementation for assets and favorites
-│   │   └── sampler         # Samples the DB with test assets
-│   ├── pkg
-│   │   ├── dbmigrations
-│   │   ├── envutil
-│   │   ├── httputil
-│   │   │   └── middleware
-│   │   └── logutil
-│   └── users               # User service
-│       ├── inmemorydb
-│       └── sampler         # Samples the DB with test users
-├── migrations
-└── tests
-    ├── e2e
-    └── integration
-```
 
 ## A Few Notes
 
