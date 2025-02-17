@@ -62,10 +62,6 @@ func (s *Service) FavoriteAsset(ctx context.Context, params *FavoriteAssetParams
 	}
 
 	// I'm assuming the user doesn't need to get a confirmation that the asset was marked as favorite.
-	// The goroutines will eventually die due to context timeout.
-	// But we might consider using a worker pool here to avoid creating too many of them in case of a high volume of requests.
-	// I'm a bit concerned about being a feature-creep here just for showing off.
-	// Also, "Premature optimization is the root of all evil."
 	s.workerPool.submit(params)
 	return nil
 }
