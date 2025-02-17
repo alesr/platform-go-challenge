@@ -1,31 +1,274 @@
-# GlobalWebIndex Engineering Challenge
+# Platform Go Challenge Solution
 
-## Introduction
+- [Overview](#overview)
+- [Testing the Solution (Demo)](#testing-the-solution-demo)
+- [System Design](#system-design)
+- [Prerequisites](#prerequisites)
+- [Running the Application](#running-the-application)
+- [API Documentation](#api-documentation)
+- [Testing](#testing)
+- [Code Quality](#code-quality)
+- [Project Structure](#project-structure)
 
-This challenge is designed to give you the opportunity to demonstrate your abilities as a software engineer and specifically your knowledge of the Go language.
+## Overview
 
-On the surface the challenge is trivial to solve, however you should choose to add features or capabilities which you feel demonstrate your skills and knowledge the best. For example, you could choose to optimise for performance and concurrency, you could choose to add a robust security layer or ensure your application is highly available. Or all of these.
+Welcome to my Platform Go Challenge Solution - PGC!
+First, I'd like to express my [appreciation](https://alesr.github.io/posts/job-quest/) for the challenge requirements, which provided me with an enjoyable programming experience over the past few days.
 
-Of course, usually we would choose to solve any given requirement with the simplest possible solution, however that is not the spirit of this challenge.
+While implementing this solution, I made several assumptions and established some *product requirements* to drive my implementation in a way that reflects a somewhat real-world scenario. I've included extensive comments throughout the code to help you follow my thought process. I hope you don't mind them.
 
-## Challenge
+## Testing the Solution (Demo)
 
-Let's say that in GWI platform all of our users have access to a huge list of assets. We want our users to have a peronal list of favourites, meaning assets that favourite or “star” so that they have them in their frontpage dashboard for quick access. An asset can be one the following
-* Chart (that has a small title, axes titles and data)
-* Insight (a small piece of text that provides some insight into a topic, e.g. "40% of millenials spend more than 3hours on social media daily")
-* Audience (which is a series of characteristics, for that exercise lets focus on gender (Male, Female), birth country, age groups, hours spent daily on social media, number of purchases last month)
-e.g. Males from 24-35 that spent more than 3 hours on social media daily.
+### Prerequisites
 
-Build a web server which has some endpoint to receive a user id and return a list of all the user’s favourites. Also we want endpoints that would add an asset to favourites, remove it, or edit its description. Assets obviously can share some common attributes (like their description) but they also have completely different structure and data. It’s up to you to decide the structure and we are not looking for something overly complex here (especially for the cases of audiences). There is no need to have/deploy/create an actual database although we would like to discuss about storage options and data representations.
+- Docker
+- Go 1.24 for running the application outside Docker containers (I'm using a new feature =])
 
-Note that users have no limit on how many assets they want on their favourites so your service will need to provide a reasonable response time.
+### Demo
 
-A working server application with functional API is required, along with a clear readme.md. Useful and passing tests would be also be viewed favourably
+Let's start with the most important part.
 
-It is appreciated, though not required, if a Dockerfile is included.
+To launch the application in a Docker container, run:
 
-## Submission
+```bash
+make docker-up
+```
 
-Just create a fork from the current repo and send it to us!
+This command will start both the application and PostgreSQL database containers.
 
-Good luck, potential colleague!
+The application automatically provisions test users and assets during initialization.
+Any API endpoint requiring user or asset IDs must use these test resources.
+
+If you prefer running the app outside Docker, you can use `make run` which will run only the Postgres DB on a container. Note that I'm using the new `omitzero` JSON tag that comes with the new 1.24 version. I haven't tested the code on previous Go versions. If you don't want to install the new Go version, stick with the Docker setup. Everything else, including the HTTP port, will remain the same regardless of how you choose to run the app.
+
+To list test users after initializing the API:
+
+```bash
+curl "http://localhost:8090/users"
+```
+
+For listing available assets (charts, insights, audiences), call:
+
+```bash
+curl "http://localhost:8090/assets?pageSize=10&maxResults=100"
+```
+
+Once you have obtained the test user and asset IDs from the previous steps, you can mark an asset as a favorite by making the following request:
+
+```bash
+curl -X POST "http://localhost:8090/assets/favorite" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": "[your-selected-user-id]",
+    "asset_id": "[your-selected-asset-d]",
+    "description": "A description of your choice."
+  }'
+```
+
+To update the description of a favorited asset:
+
+```bash
+curl -X PATCH "http://localhost:8090/users/[your-selected-user-id]/favorites/[favorite-id-from-previous-step]" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "Your updated description"
+  }'
+```
+
+Finally, to remove a favorite:
+
+```bash
+curl -X DELETE "http://localhost:8090/users/01JM9RECVAMFMY137JMWXEEW9A/favorites/[favcorite-id-from-previous-steps]"
+```
+
+Check the API Documentation section for more details.
+
+### E2E Tests and Demo
+
+I've designed the end-to-end tests to demo application in a convenient way.
+
+When you run `make test-e2e-docker`, you should see output similar to:
+
+```bash
+=== RUN   TestE2E
+
+Listing users...
+User selected: Miss Madge Kohler
+
+Listing assets...
+Asset selected: 01JM9XYX2AMZBCCR4XWHCP3G1M (Type: AUDIENCE)
+
+Creating favorite...
+Favorite created with description: "Test favorite"
+
+Retrieving favorites...
+Favorite found: 01JM9XYXJT9VEBRR55AVC9J33V with description: "Test favorite"
+
+Updating favorite...
+Favorite updated successfully from "Test favorite" to "Updated description"
+
+Deleting favorite...
+Verifying deletion...
+Favorite successfully deleted
+--- PASS: TestE2E (0.53s)
+PASS
+```
+
+## Application Design
+
+```mermaid
+graph TB
+    Client[HTTP Client] --> RApp[REST App]
+    RApp --> Handlers[Handlers Layer]
+    Handlers --> AService[Assets Service]
+    Handlers --> UService[Users Service]
+    Handlers --> FService[Favorites Service]
+    AService --> PgRepo[Postgres Repository]
+    UService --> InMemRepo[In-Memory Repository]
+    FService --> PgRepo
+    PgRepo --> DB[(PostgreSQL)]
+    InMemRepo --> Cache[(Memory Cache)]
+```
+
+## Project Structure
+
+```
+.
+├── api                       # API-specific code
+│   └── resterrors           # Transport error mapping
+├── build                    # Docker and build configurations
+├── cmd                      # Application setup and initialization
+│   └── pgc
+├── docs                     # API documentation
+│   └── source
+│       └── includes
+├── internal
+│   ├── app                  # HTTP server and REST API
+│   │   └── rest
+│   │       └── handlers
+│   ├── assets              # Service for assets management
+│   │   ├── favorites       # Subpackage with service for managing user's favorite assets
+│   │   ├── postgres        # Repository implementation for assets and favorites
+│   │   └── sampler         # Samples the DB with test assets
+│   ├── pkg
+│   │   ├── dbmigrations
+│   │   ├── envutil
+│   │   ├── httputil
+│   │   │   └── middleware
+│   │   └── logutil
+│   └── users               # User service
+│       ├── inmemorydb
+│       └── sampler         # Samples the DB with test users
+├── migrations
+└── tests
+    ├── e2e
+    └── integration
+```
+
+## Running the Application
+
+### Locally
+
+1. Run the application:
+
+```bash
+make run
+```
+
+This command starts a PostgreSQL container and runs the application locally.
+The server will be available at `http://localhost:8090`
+
+### With Docker
+
+1. Build and start all services:
+
+```bash
+make docker-up
+```
+
+This command launches both the database and application containers.
+
+## API Documentation
+
+For a comprehensive list of all available endpoints, you can start a Docker container serving the API specification with the following command:
+
+1. Start the documentation server:
+```bash
+make docs-up
+```
+
+2. Visit `http://localhost:4567` in your browser.
+Note that this page usually takes a couple of seconds to become available.
+
+3. Stop the documentation server:
+```bash
+make docs-down
+```
+
+## Testing
+
+### Running Tests Locally (requires Go 1.24)
+
+1. Unit tests:
+```bash
+make test-unit
+```
+
+2. Integration tests:
+```bash
+make test-it
+```
+
+3. End-to-end tests:
+```bash
+make test-e2e
+```
+
+4. Run all tests:
+```bash
+make test-all
+```
+
+### Running Tests in Docker
+
+1. Unit tests:
+```bash
+make test-unit-docker
+```
+
+2. Integration tests:
+```bash
+make test-it-docker
+```
+
+3. End-to-end tests:
+```bash
+make test-e2e-docker
+```
+
+4. Run all tests:
+```bash
+make test-all-docker
+```
+
+## Code Quality
+
+Run all code quality checks:
+```bash
+make check-all
+```
+
+This includes:
+- Code formatting
+- Go vet
+- Vulnerability checking
+
+## Available Make Commands
+
+Run `make help` to see all available commands and their descriptions.
+
+## A Few Notes
+
+I've aimed for proper testing coverage and I would certainly add many more unit tests if I had time. However, I had to find *a* balance between designing and implementing the application, and showing you that I really care about *having* a sensible coverage."
+
+I hope you enjoy my solution and I'm looking forward to your feedback. Peace ✌️
