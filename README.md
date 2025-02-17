@@ -25,7 +25,9 @@ While implementing this solution, I made several assumptions and established som
 ### Prerequisites
 
 - Docker
-- Go 1.24 for running the application outside Docker containers (I'm using a new feature =])
+- Go 1.24 for running the application outside Docker containers.
+
+PS: I'm using a new feature from 1.24. I test the code using previous Go versions in the Github CI, but haven't tried manually myself.
 
 ### Demo
 
