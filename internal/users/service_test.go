@@ -101,7 +101,7 @@ func TestService_FetchUser(t *testing.T) {
 		expectedError   error
 	}{
 		{
-			name:    "succesfully return a user",
+			name:    "successfully return a user",
 			givenID: givenUser.ID.String(),
 			givenRepoResult: func() (*User, error) {
 				return &givenUser, nil

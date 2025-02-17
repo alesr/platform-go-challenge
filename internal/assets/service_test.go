@@ -176,7 +176,7 @@ func createTestAssetsHelper(t *testing.T) testAssets {
 		},
 		insights: []InsightAsset{
 			factory.CreateInsight("I'm a very chill and friendly dev"),
-			factory.CreateInsight("I think I'm gonna know if you read the tests throughly =]"),
+			factory.CreateInsight("I think I'm gonna know if you read the tests thoroughly =]"),
 		},
 		audiences: []AudienceAsset{
 			factory.CreateAudience("Female", "BR", 25, 34, 3, 5),
