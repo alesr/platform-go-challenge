@@ -1,5 +1,6 @@
 # Platform Go Challenge Solution
 
+[![codecov](https://codecov.io/gh/alesr/platform-go-challenge/graph/badge.svg?token=z89dBdQJMV)](https://codecov.io/gh/alesr/platform-go-challenge)
 [![Go Report Card](https://goreportcard.com/badge/github.com/alesr/platform-go-challenge)](https://goreportcard.com/report/github.com/alesr/platform-go-challenge)
 
 - [Overview](#overview)
