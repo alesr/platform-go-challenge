@@ -274,6 +274,6 @@ Run `make help` to see all available commands and their descriptions.
 
 ## A Few Notes
 
-I've aimed for proper testing coverage and I would certainly add many more unit tests if I had time. However, I had to find *a* balance between designing and implementing the application, and showing you that I really care about *having* a sensible coverage."
+I've aimed for proper testing coverage and I would certainly add many more unit tests if I had time. However, I had to find a balance between designing and implementing the application, and showing you that I really care about having a sensible coverage.
 
 I hope you enjoy my solution and I'm looking forward to your feedback. Peace ✌️
