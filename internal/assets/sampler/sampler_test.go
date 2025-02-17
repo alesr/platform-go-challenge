@@ -29,7 +29,6 @@ func TestSampleAssets(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -69,8 +68,6 @@ func TestSampleAssets(t *testing.T) {
 				default:
 					t.Errorf("unexpected asset type: %v", asset.Type())
 				}
-
-				// Common assertions for all asset types
 				assert.NotZero(t, asset.(assets.Asseter).Type())
 			}
 		})
