@@ -106,7 +106,7 @@ func TestFetchUser(t *testing.T) {
 		expectedError error
 	}{
 		{
-			name:         "succesfully fetchs user",
+			name:         "successfully fetchs user",
 			givenUserID:  givenUsers[0].ID.String(),
 			expectedUser: &givenUsers[0],
 		},
