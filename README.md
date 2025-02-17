@@ -1,5 +1,7 @@
 # Platform Go Challenge Solution
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/alesr/platform-go-challenge)](https://goreportcard.com/report/github.com/alesr/platform-go-challenge)
+
 - [Overview](#overview)
 - [Testing the Solution (Demo)](#testing-the-solution-demo)
 - [System Design](#system-design)
