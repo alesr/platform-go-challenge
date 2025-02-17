@@ -124,7 +124,7 @@ PASS
 ```mermaid
 graph TB
     Client[HTTP Client] --> RApp[REST App]
-    RApp --> Handlers[Handlers Layer]
+    RApp --> Handlers[HTTP Handlers]
     Handlers --> AService[Assets Service]
     Handlers --> UService[Users Service]
     Handlers --> FService[Favorites Service]
