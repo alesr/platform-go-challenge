@@ -1,0 +1,42 @@
+networks:
+  backend:
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: build/Dockerfile
+    environment:
+      DB_HOST: db:5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: pgc
+    ports:
+      - "8090:8090"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend
+
+  db:
+    image: postgres:17.2-alpine3.21
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: pgc
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

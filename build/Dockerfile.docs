@@ -1,0 +1,4 @@
+FROM slatedocs/slate:v2.13.0
+
+COPY docs/source/index.html.md /srv/slate/source/index.html.md
+COPY docs/source/includes /srv/slate/source/includes
